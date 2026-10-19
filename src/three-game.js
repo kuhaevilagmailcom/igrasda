@@ -85,7 +85,7 @@ const introCues = [
   { at: 3.2, kicker: 'ЗАПИСЬ ПОВРЕЖДЕНА', text: 'Коридор не заканчивается. Из темноты доносится чьё-то дыхание.' },
   { at: 6.4, kicker: 'ОБНАРУЖЕН ЧЕЛОВЕК', text: 'Его зовут Мишаня. Не подходи к нему и не стой на месте.' },
   { at: 9.6, kicker: 'ОН УЖЕ ИДЁТ', text: 'Впереди две двери. Замечай странности — ошибка вернёт тебя в начало.' },
-  { at: 12.2, kicker: 'ПЯТЬ НОЧЕЙ', text: 'Шесть ночей. Первая покажет исходный коридор — дальше аномалии будут опаснее.' }
+  { at: 12.2, kicker: 'ВОСЕМЬ НОЧЕЙ', text: 'Восемь ночей в старом доме. Первую ночь Мишаня не появится — со второй начнётся охота.' }
 ];
 let dust = null;
 let dustPositions = null;
@@ -437,7 +437,7 @@ function setupRound() {
   const mishaGap = Math.max(3.8, 5.25 - (state.night - 1) * 0.24 + (Math.random() - 0.5) * 0.8);
   const mishaLane = (Math.random() - 0.5) * 1.8;
   const mishaZ = Math.min(12.75, state.z + mishaGap);
-  spawnMisha(state.active, mishaZ, mishaLane);
+  spawnMisha(state.active && state.night >= 2, mishaZ, mishaLane);
   state.mishaDelay = state.active ? Math.max(1.2, 2.6 - (state.night - 1) * 0.24) : 0;
   state.voiceTimer = (state.night >= 3 ? 1.2 : state.night === 2 || state.night === 5 ? 1.6 : 2.0) + Math.random() * 1.8;
   state.lastPulse = 0;
@@ -446,7 +446,7 @@ function setupRound() {
   updateHud();
 }
 function updateHud() {
-  $('night').textContent = `НОЧЬ ${state.night} / 6`;
+  $('night').textContent = `НОЧЬ ${state.night} / 8`;
   $('objective').textContent = 'Осмотри коридор. Замечай детали и решай сам, какой выход выбрать.';
 }
 function say(text, duration = 4600, voice = false) {
@@ -558,7 +558,7 @@ function start() {
   clearHorrorMood();
   setupRound();
   // Отдельный постановочный кадр: Мишаня виден в самом коридоре, прежде чем начнётся погоня.
-  spawnMisha(true, -16.2, 0.72);
+  spawnMisha(false, -16.2, 0.72);
   introActive = true; introElapsed = 0; introCueIndex = -1;
   camera.position.set(0, 1.72, 12.5);
   camera.lookAt(0, 1.48, -20);
@@ -643,7 +643,7 @@ function resetToFirstNight() {
 function chooseDoor(door) {
   if (state.paused || !state.active) return;
   if (door.userData.correct) {
-    if (state.night === 6) {
+    if (state.night === 8) {
       state.active = false; state.paused = true; setDrone(false);
       $('hud').classList.add('hidden'); $('crosshair').classList.add('hidden');
       $('misha-dialogue').classList.add('hidden');
