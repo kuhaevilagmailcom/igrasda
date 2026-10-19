@@ -60,6 +60,7 @@ const mishaFrames = [];
 let mishaFrameIndex = -1;
 let mishaAnimTime = 0;
 let activeVoiceClip = null;
+let nextVoiceIndex = 0;
 let introActive = false;
 let introElapsed = 0;
 let introCueIndex = -1;
@@ -450,7 +451,9 @@ const voiceCaptions = [
 function speakMisha() {
   if (activeVoiceClip && !activeVoiceClip.paused && !activeVoiceClip.ended) return;
   if (activeVoiceClip) { activeVoiceClip.pause(); activeVoiceClip.currentTime = 0; }
-  const index = 1 + Math.floor(Math.random() * voiceCaptions.length);
+  // Play the six supplied lines in order, then loop back to the first one.
+  const index = (nextVoiceIndex % voiceCaptions.length) + 1;
+  nextVoiceIndex = (nextVoiceIndex + 1) % voiceCaptions.length;
   const clip = playClip(`golos misha (${index}).mp3`, 0.9);
   activeVoiceClip = clip;
   // Субтитр живёт примерно столько же, сколько реплика; следующая фраза не накладывается поверх неё.
@@ -516,6 +519,8 @@ function updateIntro(dt) {
   if (!introActive) return;
   introElapsed += Math.min(dt, 0.05);
   const t = introElapsed;
+  const cueIndex = introCues.reduce((current, cue, index) => t >= cue.at ? index : current, 0);
+  setIntroCue(cueIndex);
   const mishaProgress = smoothstep(t / introDuration);
   if (misha) {
     misha.position.x = 0.72 + Math.sin(t * 0.82) * 0.14;
