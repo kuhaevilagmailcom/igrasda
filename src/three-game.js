@@ -697,7 +697,7 @@ function endGameWithDeath() {
   playClip('death-bong.mp3', 0.95);
   pulse(38, 0.6, 0.16);
   resetToFirstNight();
-  notice('ТЫ ПРОИГРАЛ', 'Мишаня тебя поймал. Попробуй ещё раз — следи за аномалиями и доберись до двери.', 'Попробовать снова', continueRound);
+  notice('ТЫ ПИДОРАС АВЫАЖБЫВДЛЖАЬВЫ', 'Мишаня тебя поймал. Попробуй ещё раз.', 'Попробовать снова', continueRound);
   setTimeout(() => { state.died = false; }, 900);
 }
 function update(delta) {
