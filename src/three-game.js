@@ -15,9 +15,9 @@ const nights = [
   { anomaly: false, kind: 'normal' }, // 1: исходный коридор, синяя дверь
   { anomaly: true, kind: 'red' },     // 2: аварийный красный свет
   { anomaly: true, kind: 'chairs' },  // 3: мебель в проходе
-  { anomaly: true, kind: 'red-chairs' }, // 4: красный свет и мебель
-  { anomaly: true, kind: 'portrait' },   // 5: фигура у дальней стены
-  { anomaly: true, kind: 'final' },      // 6: финальная аномалия
+  { anomaly: true, kind: 'shadow' },       // 4: тёмная фигура и холодный свет
+  { anomaly: true, kind: 'trail' },        // 5: следы и портрет Миши
+  { anomaly: true, kind: 'final' },        // 6: финальная красная аномалия
 ];
 const thoughts = [
   'Ты здесь не один. Продолжай идти.',
@@ -362,25 +362,59 @@ function setupRound() {
   const config = nights[state.night - 1];
   state.anomaly = config.anomaly;
   doors.forEach((door) => { door.userData.correct = state.anomaly ? door.userData.isRed : !door.userData.isRed; });
-  if (['red', 'red-chairs', 'final'].includes(config.kind)) {
-    // Яркий аварийный свет заметен издалека, но интерфейс не сообщает, что он означает.
-    redLight.intensity = 6.4;
+  if (['red', 'final'].includes(config.kind)) {
+    // Ночь 2 и финал: аварийная красная лампа заливает дальнюю часть коридора.
+    redLight.intensity = config.kind === 'final' ? 8.2 : 6.4;
     const emergencyLamp = addBox(0.72, 0.12, 0.2, 0, 3.18, -12, 0xe02028, anomalyGroup, { emissive: 0xff0712, emissiveIntensity: 2.5, roughness: 0.35 });
     emergencyLamp.material.toneMapped = false;
-    const glow = new THREE.PointLight(0xff1420, 2.8, 11, 1.6);
+    const glow = new THREE.PointLight(0xff1420, config.kind === 'final' ? 4.2 : 2.8, 11, 1.6);
     glow.position.set(0, 3.05, -12); anomalyGroup.add(glow);
   }
-  if (['chairs', 'red-chairs'].includes(config.kind)) {
-    // Контрастная группа предметов нарушает привычную симметрию коридора.
+  if (config.kind === 'chairs') {
+    // Ночь 3: три стула перегораживают проход.
     addChair(-1.12, -10.1); addChair(0.18, -11.25); addChair(1.16, -10.15);
     addBox(1.24, 0.028, 0.12, 0.15, 0.035, -12.8, 0x71604e, anomalyGroup);
     addBox(0.82, 0.024, 0.09, -0.48, 0.035, -9.35, 0x88725b, anomalyGroup);
   }
-  if (['portrait', 'final'].includes(config.kind)) {
+  if (config.kind === 'shadow') {
+    // Ночь 4: отдельная холодная аномалия — силуэт висит в глубине коридора.
+    const coldGlow = new THREE.PointLight(0x45a9ff, 3.1, 12, 1.7);
+    coldGlow.position.set(-1.15, 2.2, -17.2); anomalyGroup.add(coldGlow);
+    const shadowBody = addBox(0.72, 1.65, 0.22, -1.15, 1.1, -17.2, 0x03070d, anomalyGroup, { emissive: 0x071323, emissiveIntensity: 0.35 });
+    shadowBody.rotation.z = -0.08;
+    addSphere(0.32, -1.15, 2.12, -17.2, 0x020408, anomalyGroup, [0.82, 1.12, 0.72]);
+    addBox(0.13, 1.1, 0.14, -1.58, 0.85, -17.15, 0x030609, anomalyGroup).rotation.z = -0.18;
+    addBox(0.13, 1.1, 0.14, -0.72, 0.85, -17.15, 0x030609, anomalyGroup).rotation.z = 0.18;
+    for (const x of [-2.6, 2.6]) {
+      const lamp = addBox(0.16, 0.08, 0.16, x, 3.36, -17.2, 0x3c9ee8, anomalyGroup, { emissive: 0x168bff, emissiveIntensity: 1.8 });
+      lamp.material.toneMapped = false;
+    }
+  }
+  if (config.kind === 'trail') {
+    // Ночь 5: следы ведут к портрету, но фигура уже кажется ближе.
     const tex = loader.load(asset('assets/hero-close.png')); tex.colorSpace = THREE.SRGBColorSpace;
     const portrait = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 2.2), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
     portrait.position.set(3.36, 1.84, -11.7); portrait.rotation.y = -Math.PI / 2; anomalyGroup.add(portrait);
+    const stainMat = mat(0x3b080d, { roughness: 0.98 });
+    for (let i = 0; i < 9; i++) {
+      const side = i % 2 === 0 ? -0.22 : 0.22;
+      const stain = new THREE.Mesh(new THREE.CircleGeometry(0.12 + (i % 3) * 0.035, 10), stainMat);
+      stain.rotation.x = -Math.PI / 2;
+      stain.position.set(side, 0.045, -7.8 - i * 1.35);
+      stain.scale.set(0.8, 1.55, 1);
+      anomalyGroup.add(stain);
+    }
     addBox(1.3, 2.9, 0.05, 0, 1.46, -14.5, 0x020204, anomalyGroup);
+    const whisperGlow = new THREE.PointLight(0x9b1226, 1.3, 8, 1.8);
+    whisperGlow.position.set(0, 1.4, -10); anomalyGroup.add(whisperGlow);
+  }
+  if (config.kind === 'final') {
+    // Ночь 6 объединяет мотивы, но усиливает их: красный свет и огромный портрет.
+    const tex = loader.load(asset('assets/hero-close.png')); tex.colorSpace = THREE.SRGBColorSpace;
+    const portrait = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 2.8), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+    portrait.position.set(3.36, 1.84, -11.7); portrait.rotation.y = -Math.PI / 2; anomalyGroup.add(portrait);
+    addBox(1.3, 2.9, 0.05, 0, 1.46, -14.5, 0x020204, anomalyGroup);
+    addChair(-0.9, -10.1); addChair(0.9, -11.25);
   }
   // Мишаня присутствует на каждом уровне с самого начала раунда.
   // Он начинает позади игрока, давая несколько секунд на ориентирование, а затем идёт в погоню.
