@@ -7,18 +7,32 @@ const state = {
   x: 0, z: 8, y: 0, yaw: 0, pitch: 0, keys: Object.create(null),
   jumpVelocity: 0, voiceTimer: 0, stepTimer: 0, flickerTimer: 0,
   lastPulse: 0, lastVoice: 0, died: false, mishaDelay: 0,
-  horrorBurstTimer: 0, horrorBurstDuration: 0,
+  horrorBurstTimer: 0, horrorBurstDuration: 0, anomalyKind: 'normal',
 };
 
-// Первая ночь — эталонный коридор без аномалий: верный выход всегда синий.
-const nights = [
-  { anomaly: false, kind: 'normal' }, // 1: исходный коридор, синяя дверь
-  { anomaly: true, kind: 'red' },     // 2: аварийный красный свет
-  { anomaly: true, kind: 'chairs' },  // 3: мебель в проходе
-  { anomaly: true, kind: 'shadow' },       // 4: тёмная фигура и холодный свет
-  { anomaly: true, kind: 'trail' },        // 5: следы и портрет Миши
-  { anomaly: true, kind: 'final' },        // 6: финальная красная аномалия
+// Первая ночь всегда эталонная. Дальше тип коридора выбирается случайно.
+const normalNight = { anomaly: false, kind: 'normal' };
+const anomalyPool = [
+  { anomaly: true, kind: 'red' },
+  { anomaly: true, kind: 'red' },
+  { anomaly: true, kind: 'chairs' },
+  { anomaly: true, kind: 'chairs' },
+  { anomaly: true, kind: 'shadow' },
+  { anomaly: true, kind: 'trail' },
+  { anomaly: true, kind: 'final' },
+  { anomaly: false, kind: 'normal' },
+  { anomaly: false, kind: 'normal' },
 ];
+let previousNightKind = 'normal';
+function chooseNightConfig(night) {
+  if (night === 1) return normalNight;
+  // Убираем повтор одной и той же аномалии подряд, но обычная ночь может повториться.
+  let options = anomalyPool.filter((item) => item.kind !== previousNightKind || item.kind === 'normal');
+  if (!options.length) options = anomalyPool;
+  const chosen = options[Math.floor(Math.random() * options.length)];
+  previousNightKind = chosen.kind;
+  return chosen;
+}
 const thoughts = [
   'Ты здесь не один. Продолжай идти.',
   'Этот коридор кажется длиннее, чем должен быть.',
@@ -359,8 +373,9 @@ function setupRound() {
   $('misha-dialogue').classList.add('hidden');
   clearAnomaly();
   setHorrorMood();
-  const config = nights[state.night - 1];
+  const config = chooseNightConfig(state.night);
   state.anomaly = config.anomaly;
+  state.anomalyKind = config.kind;
   doors.forEach((door) => { door.userData.correct = state.anomaly ? door.userData.isRed : !door.userData.isRed; });
   if (['red', 'final'].includes(config.kind)) {
     // Ночь 2 и финал: аварийная красная лампа заливает дальнюю часть коридора.
@@ -419,8 +434,8 @@ function setupRound() {
   // Мишаня присутствует на каждом уровне с самого начала раунда.
   // Он начинает позади игрока, давая несколько секунд на ориентирование, а затем идёт в погоню.
   // С каждой ночью стартовая дистанция немного сокращается, а давление на игрока растёт.
-  const mishaGap = [5.2, 4.9, 4.7, 4.45, 4.2, 3.95][state.night - 1];
-  const mishaLane = [-0.72, 0.68, -0.5, 0.48, -0.28, 0][state.night - 1];
+  const mishaGap = Math.max(3.8, 5.25 - (state.night - 1) * 0.24 + (Math.random() - 0.5) * 0.8);
+  const mishaLane = (Math.random() - 0.5) * 1.8;
   const mishaZ = Math.min(12.75, state.z + mishaGap);
   spawnMisha(state.active, mishaZ, mishaLane);
   state.mishaDelay = state.active ? Math.max(1.2, 2.6 - (state.night - 1) * 0.24) : 0;
@@ -667,8 +682,8 @@ function nearbyDoor() {
 function canOccupy(x, z) {
   if (x < -3.02 || x > 3.02 || z < -27.0 || z > 8.4) return false;
   for (const b of blockers) if (Math.abs(x - b.x) < b.hx + 0.26 && Math.abs(z - b.z) < b.hz + 0.26) return false;
-  if (state.night === 3 && [[-1.05, -10.5], [0.2, -11.1], [1.18, -10.35]].some(([bx, bz]) => Math.abs(x - bx) < 0.48 && Math.abs(z - bz) < 0.48)) return false;
-  if (state.night === 5 && Math.abs(x) < 0.8 && Math.abs(z + 14.5) < 0.22) return false;
+  if (state.anomalyKind === 'chairs' && [[-1.05, -10.5], [0.2, -11.1], [1.18, -10.35]].some(([bx, bz]) => Math.abs(x - bx) < 0.48 && Math.abs(z - bz) < 0.48)) return false;
+  if (['trail', 'final'].includes(state.anomalyKind) && Math.abs(x) < 0.8 && Math.abs(z + 14.5) < 0.22) return false;
   return true;
 }
 function endGameWithDeath() {
