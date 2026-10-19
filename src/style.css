@@ -149,6 +149,26 @@ body.horror-night-3 #hud .hud-overline #night{color:#ff6c74}
 #intro-skip{position:absolute;z-index:4;right:clamp(20px,5vw,76px);top:auto;bottom:clamp(49px,9vh,95px);display:flex;align-items:center;gap:18px;padding:12px 15px;border:1px solid rgba(255,255,255,.23);background:rgba(4,5,7,.5);color:rgba(255,255,255,.88);font-size:9px;font-weight:800;letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s,border-color .2s,transform .2s}
 #intro-skip:hover{background:rgba(163,32,40,.42);border-color:rgba(255,113,120,.65);transform:translateY(-1px)}#intro-skip span{font-size:14px;color:#ff777b}
 #intro-skip:focus-visible{outline:2px solid #ffb8bb;outline-offset:3px}
+/* Надёжное отображение текста заставки поверх сцены. */
+#intro-cutscene:not(.hidden) .intro-caption,
+#intro-cutscene:not(.hidden) #intro-subtitle,
+#intro-cutscene:not(.hidden) #intro-kicker{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#intro-cutscene:not(.hidden) .intro-caption{
+  z-index:5!important;
+  min-height:120px;
+  padding:clamp(18px,2.4vw,30px);
+  border-left:2px solid rgba(239,78,86,.95);
+  background:linear-gradient(90deg,rgba(4,5,7,.9),rgba(4,5,7,.52) 78%,transparent);
+}
+#intro-cutscene:not(.hidden) #intro-subtitle{
+  min-height:2.3em;
+  color:#fff!important;
+  text-shadow:0 3px 18px #000,0 1px 3px #000;
+}
 @keyframes intro-caption-reveal{from{opacity:0;transform:translateY(15px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:650px){.intro-topline{top:46px;font-size:7px;letter-spacing:.11em}.intro-caption{left:23px;bottom:clamp(105px,17vh,160px);width:calc(100vw - 46px)}.intro-caption p{font-size:8px;margin-bottom:11px}.intro-caption h2{font-size:clamp(27px,7vw,39px)}#intro-skip{top:auto;bottom:clamp(49px,9vh,95px);right:20px;padding:10px 12px;font-size:8px}.intro-progress{bottom:clamp(32px,7vh,82px)}}
 @media(prefers-reduced-motion:reduce){.intro-caption-change,#intro-cutscene .intro-topline i{animation:none!important}}
