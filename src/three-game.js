@@ -496,6 +496,7 @@ function setIntroCue(index) {
   caption.classList.add('intro-caption-change');
 }
 function start() {
+  nextVoiceIndex = 0;
   startAudio(); setDrone(true);
   state.active = false; state.paused = false; state.night = 1;
   state.x = 0; state.z = 8; state.y = 0; state.yaw = 0; state.pitch = 0; state.jumpVelocity = 0;
