@@ -530,6 +530,10 @@ function updateIntro(dt) {
     // В заставке тоже поворачиваем спрайт только по вертикали — без наклона и кувырков.
     misha.rotation.set(0, Math.atan2(camera.position.x - misha.position.x, camera.position.z - misha.position.z), 0);
     animateMisha(dt, true);
+    // Жёстко сбрасываем наклон спрайта каждый кадр: он может быть только вертикальным.
+    misha.rotation.x = 0;
+    misha.rotation.z = 0;
+    misha.scale.set(1, 1, 1);
   }
   if (t < 4.5) {
     const p = smoothstep(t / 4.5);
@@ -544,8 +548,6 @@ function updateIntro(dt) {
     camera.position.set(-1 + 0.62 * p, 1.72 + Math.sin(t * 1.4) * 0.018, -1 + (-1.3) * p);
     camera.lookAt(misha ? misha.position.x : 0.72, 1.43, misha ? misha.position.z - 0.2 : -7.5);
   }
-  const cueIndex = introCues.reduce((idx, cue, i) => t >= cue.at ? i : idx, 0);
-  setIntroCue(cueIndex);
   $('intro-timecode').textContent = `REC  00:${String(Math.min(59, Math.floor(t))).padStart(2, '0')}`;
   $('intro-progress-bar').style.transform = `scaleX(${Math.min(1, t / introDuration)})`;
   if (t >= introDuration) finishIntro(false);
