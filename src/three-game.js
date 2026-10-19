@@ -509,14 +509,14 @@ function speakMisha() {
   // Play the six supplied lines in order, then loop back to the first one.
   const index = (nextVoiceIndex % voiceCaptions.length) + 1;
   nextVoiceIndex = (nextVoiceIndex + 1) % voiceCaptions.length;
-  const clip = playClip(`golos misha (${index}).mp3`, 0.9);
+  const clip = playClip(`golos misha (${index}).mp3`, 1.0);
   activeVoiceClip = clip;
   // Субтитр живёт примерно столько же, сколько реплика; следующая фраза не накладывается поверх неё.
   say(voiceCaptions[index - 1], voiceDurations[index - 1] + 450, true);
   clip.addEventListener('ended', () => {
     if (activeVoiceClip !== clip) return;
     activeVoiceClip = null;
-    state.voiceTimer = (state.night >= 3 ? 0.9 : 1.5) + Math.random() * (state.night >= 3 ? 1.5 : 2.1);
+    state.voiceTimer = 0.25 + Math.random() * 0.55;
   }, { once: true });
   clip.addEventListener('error', () => { if (activeVoiceClip === clip) activeVoiceClip = null; }, { once: true });
 }
@@ -749,11 +749,11 @@ function update(delta) {
     }
     if (distance < 1.05) { endGameWithDeath(); return; }
     state.voiceTimer -= dt;
-    const voiceGap = state.night === 3 ? 1250 : state.night === 2 || state.night === 5 ? 1750 : 2300;
+    const voiceGap = 500;
     const voicePlaying = activeVoiceClip && !activeVoiceClip.paused && !activeVoiceClip.ended;
-    if (distance < 18 && state.voiceTimer <= 0 && !voicePlaying && performance.now() - state.lastVoice > voiceGap) {
+    if (state.voiceTimer <= 0 && !voicePlaying && performance.now() - state.lastVoice > voiceGap) {
       state.lastVoice = performance.now();
-      state.voiceTimer = (state.night >= 3 ? 1.0 : 1.5) + Math.random() * (state.night >= 3 ? 1.6 : 2.2);
+      state.voiceTimer = 0.25 + Math.random() * 0.55;
       speakMisha();
     }
   } else if (misha?.visible) {
