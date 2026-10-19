@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#08090b">
+  <meta name="description" content="МИШАНЯ 228 ХОРОР — пять ночей в старом доме. Не доверяй коридору.">
+  <title>МИШАНЯ 228 ХОРОР</title>
+  <link rel="stylesheet" href="./src/style.css">
+  <style>
+    #birthday-final { position:fixed; inset:0; z-index:99999; display:none; align-items:center; justify-content:center; overflow:hidden; background:#000; color:#fff; font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif; text-align:center; }
+    #birthday-final.show { display:flex; animation:final-flicker .11s steps(2,end) infinite; }
+    #birthday-final .final-photo { position:absolute; inset:-4%; width:108%; height:108%; object-fit:cover; object-position:38% center; filter:contrast(1.18) saturate(.72); animation:final-zoom 2.5s ease-in forwards; }
+    #birthday-final:before { content:''; position:absolute; inset:0; z-index:1; background:radial-gradient(ellipse at 40% 45%,transparent 10%,rgba(0,0,0,.22) 48%,#000 100%); mix-blend-mode:multiply; }
+    #birthday-final .final-message { position:relative; z-index:2; font-size:clamp(2.7rem,8vw,8rem); line-height:.94; letter-spacing:.015em; text-transform:uppercase; color:#fff; text-shadow:0 4px 0 #7b0000,0 0 32px #b00000; opacity:0; transform:scale(.8); transition:opacity .25s,transform .25s; padding:24px; max-width:1000px; }
+    #birthday-final.message-on .final-message { opacity:1; transform:scale(1); }
+    #birthday-final .final-message small { display:block; font:700 clamp(1rem,2.5vw,2rem)/1.2 Arial,sans-serif; letter-spacing:.24em; margin-top:24px; color:#ddd; }
+    #birthday-final .final-close { position:absolute; z-index:3; right:18px; bottom:18px; border:1px solid #aaa; border-radius:12px; background:#111; color:white; padding:12px 16px; cursor:pointer; opacity:.92; }
+    @keyframes final-zoom { from { transform:scale(1); } to { transform:scale(1.22); } }
+    @keyframes final-flicker { 0%,100% { filter:none; } 50% { filter:contrast(1.15) brightness(.92); } }
+    @media (prefers-reduced-motion:reduce) { #birthday-final.show { animation:none; } #birthday-final .final-photo { animation:none; } }
+    #boot-error { position:fixed; inset:auto 16px 16px 16px; z-index:100100; display:none; max-width:760px; margin:0 auto; padding:18px 20px; border:1px solid rgba(255,92,100,.65); background:rgba(10,9,11,.97); color:#fff; box-shadow:0 16px 60px rgba(0,0,0,.7); font:14px/1.55 Arial,sans-serif; }
+    #boot-error.show { display:block; }
+    #boot-error strong { display:block; margin-bottom:7px; color:#ff737a; letter-spacing:.04em; }
+    #boot-error-message { display:block; margin:8px 0 12px; color:#d8d4d2; overflow-wrap:anywhere; font-size:12px; }
+    #boot-error button { border:1px solid #b7464d; background:#741f26; color:white; padding:9px 14px; cursor:pointer; font-weight:700; }
+  </style>
+  <script type="module" id="game-module" src="./src/three-game.js?v=228-fix-20261019-2"></script>
+</head>
+<body>
+  <div id="game"></div>
+  <!-- Hidden compatibility node: prevents crashes if a browser or partial upload serves an older game module. It is never shown to the player. -->
+  <div id="signal" hidden aria-hidden="true"><i></i><b></b></div>
+  <div id="horror-effects" aria-hidden="true">
+    <div class="vhs-scanlines"></div>
+    <div class="vhs-noise"></div>
+    <div class="vhs-rgb"></div>
+    <div class="vhs-tracking"></div>
+    <div class="red-vignette"></div>
+  </div>
+  <div id="ui">
+    <section id="menu" class="screen visible">
+      <img src="./assets/menu-horror.png" alt="Мишаня на ночной дороге" class="menu-photo">
+      <div class="menu-topline" aria-hidden="true">
+        <span class="brand-mark"><i></i> NIGHT SHIFT STUDIO</span>
+        <span class="edition-tag">МИШАНЯ ИДЁТ <b>№ 228</b></span>
+      </div>
+      <div class="menu-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span> ПСИХОЛОГИЧЕСКИЙ ХОРОР</p>
+        <h1>МИШАНЯ <span>228</span><br><em>ХОРОР</em></h1>
+        <p class="menu-description">Мишаня идёт. Выбирайся, пока не поздно.</p>
+        <p class="menu-controls">Shift — это бег, пробел — прыгать, E — открыть дверь.</p>
+        <div class="menu-facts" aria-label="Особенности игры">
+          <div><strong>05</strong><span>НОЧЕЙ</span></div>
+          <i></i>
+          <div><strong>01</strong><span>ДОМ</span></div>
+          <i></i>
+          <div><strong>228</strong><span>МИШАНЯ</span></div>
+        </div>
+        <div class="menu-actions">
+          <button id="start" class="primary-button"><span>Начать игру</span><b aria-hidden="true">↗</b></button>
+          <button id="open-settings" class="ghost"><span class="settings-symbol" aria-hidden="true">⚙</span> Настройки</button>
+        </div>
+        <p class="menu-footnote"><span></span> НЕ КАЖЕТСЯ, ЧТО ТЫ ЗДЕСЬ ОДИН</p>
+      </div>
+      <div class="menu-version" aria-hidden="true">M-228 <span>•</span> BUILD 01</div>
+    </section>
+    <section id="hud" class="hidden" aria-live="polite">
+      <div class="hud-card hud-objective">
+        <div class="hud-overline"><span class="hud-dot"></span><span id="night">НОЧЬ 1 / 5</span></div>
+        <strong id="objective">Осмотри коридор. Есть ли аномалия?</strong>
+      </div>
+
+    </section>
+    <div id="crosshair" class="hidden" aria-hidden="true"></div>
+    <section id="misha-dialogue" class="hidden" aria-live="polite"><p id="misha-speaker">ГОЛОС ИЗ ТЕМНОТЫ</p><strong id="misha-text"></strong></section>
+    <section id="notice" class="hidden">
+      <p class="eyebrow" id="notice-top">СИСТЕМА НАБЛЮДЕНИЯ</p>
+      <h2 id="notice-title"></h2><p id="notice-text"></p><button id="notice-button">Продолжить</button>
+    </section>
+    <section id="pause" class="screen hidden"><div class="modal-panel"><p class="eyebrow">ПЕРЕДЫШКА</p><h2>ПАУЗА</h2><p class="modal-copy">Коридор подождёт. Мишаня — не факт.</p><button id="resume" class="primary-button">Продолжить игру <span aria-hidden="true">↗</span></button><button id="exit" class="ghost">Главное меню</button></div></section>
+    <section id="settings" class="screen hidden"><div class="modal-panel"><p class="eyebrow">НАСТРОЙКИ</p><h2>ЗВУК</h2><p class="modal-copy">Настрой атмосферу под себя.</p><label class="volume-label" for="volume"><span>Общая громкость</span><output id="volume-value" for="volume">35%</output></label><input id="volume" type="range" min="0" max="100" value="35"><button id="close-settings" class="ghost">Назад</button></div></section>
+  </div>
+  <section id="intro-cutscene" class="hidden" aria-live="polite" aria-label="Вступление">
+    <div class="intro-letterbox intro-letterbox-top"></div>
+    <div class="intro-letterbox intro-letterbox-bottom"></div>
+    <div class="intro-vignette"></div>
+    <div class="intro-topline"><span>АРХИВ 228 <i></i> ЗАПИСЬ НАЧАЛАСЬ</span><span id="intro-timecode">REC&nbsp; 00:00</span></div>
+    <div class="intro-caption" id="intro-caption">
+      <p id="intro-kicker">ПРОЛОГ</p>
+      <h2 id="intro-subtitle">Это старый дом.</h2>
+    </div>
+    <div class="intro-progress"><span id="intro-progress-bar"></span></div>
+    <button id="intro-skip" type="button">ПРОПУСТИТЬ ВСТУПЛЕНИЕ <span aria-hidden="true">↗</span></button>
+  </section>
+  <section id="boot-error" role="alert" aria-live="assertive">
+    <strong>ИГРА НЕ СМОГЛА ЗАПУСТИТЬСЯ</strong>
+    <span>Кнопка меню нажалась, но игровой модуль не запустился. Сообщение ниже поможет определить причину.</span>
+    <code id="boot-error-message"></code>
+    <button type="button" id="boot-reload">Обновить страницу</button>
+  </section>
+  <div id="birthday-final" aria-hidden="true">
+    <img class="final-photo" src="./assets/menu-horror.png" alt="">
+    <div class="final-message">С ДНЁМ РОЖДЕНИЯ,<br>БРО!<small>МИШАНЯ 228</small></div>
+    <button class="final-close" type="button">Вернуться в меню</button>
+  </div>
+  <script>
+  (() => {
+    const $ = id => document.getElementById(id);
+    let ctx = null, master = null, ambienceTimer = null;
+    let finale = false, finalScream = null, menuMusic = null;
+    const state = { lastStep: 0, started: false };
+    const volumeValue = () => { const v = $('volume')?.value; return Math.max(0, Math.min(100, Number(v == null || v === '' ? 35 : v))); }
+    const syncVolumeLabel = () => { const out = $('volume-value'); if (out) out.value = `${volumeValue()}%`; };
+    function initAudio() {
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return; }
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        master = ctx.createGain(); master.gain.value = (volumeValue() / 100) * .52;
+        master.connect(ctx.destination); ctx.resume().catch(() => {});
+      } catch (e) { /* MP3-звуки всё равно работают, даже если Web Audio недоступен. */ }
+    }
+    function startMenuMusic() {
+      if (!menuMusic) { menuMusic = new Audio('./audio/windah-horror-basudara.mp3'); menuMusic.loop = true; menuMusic.preload = 'auto'; }
+      menuMusic.volume = (volumeValue() / 100) * .7;
+      menuMusic.play().catch(() => {}); // браузер может разрешить старт лишь после первого клика
+    }
+    function stopMenuMusic() {
+      if (!menuMusic) return;
+      menuMusic.pause(); menuMusic.currentTime = 0;
+    }
+    function tone(freq=180,dur=.18,type='sine',vol=.12,slide=0,pan=0) {
+      if (!ctx || !master) return;
+      const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+      o.type=type; o.frequency.setValueAtTime(Math.max(20,freq),t);
+      if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,freq+slide),t+dur);
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+.018); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(g); if(p){p.pan.value=pan;g.connect(p);p.connect(master)}else g.connect(master); o.start(t); o.stop(t+dur+.03);
+    }
+    function noise(dur=.3,vol=.08,filter=900,pan=0) {
+      if(!ctx||!master) return;
+      const n=Math.floor(ctx.sampleRate*dur),b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);
+      for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+      const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+      s.buffer=b; f.type='lowpass'; f.frequency.value=filter; g.gain.setValueAtTime(vol,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+dur);
+      s.connect(f).connect(g); if(p){p.pan.value=pan;g.connect(p);p.connect(master)}else g.connect(master); s.start(); s.stop(ctx.currentTime+dur);
+    }
+    const sound = {
+      click(){tone(620,.055,'square',.035,-170)}, door(){noise(.16,.13,650);tone(95,.42,'sawtooth',.13,-40)},
+      correct(){tone(130,.28,'sine',.13,-60);setTimeout(()=>tone(260,.18,'triangle',.08,80),90)},
+      wrong(){noise(.55,.18,1600);tone(72,.8,'sawtooth',.16,-40);setTimeout(()=>tone(930,.12,'square',.06,-500),100)},
+      whisper(){noise(.8,.045,1900,Math.random()*1.6-.8);tone(420,.65,'sine',.018,-260,Math.random()*1.6-.8)},
+      creak(){tone(170,.7,'sawtooth',.045,-110,Math.random()*1.8-.9);setTimeout(()=>noise(.22,.035,550),170)},
+      knock(){tone(80,.12,'triangle',.18,-35,Math.random()*1.4-.7);setTimeout(()=>tone(65,.16,'triangle',.14,-25),180)},
+      static(){noise(.28,.07,3800);tone(1400,.06,'square',.025,-800)},
+      step(){tone(72+Math.random()*28,.075,'triangle',.055,-35,Math.random()*1.2-.6);noise(.055,.022,480)},
+      pulse(){tone(48,.26,'sine',.11,-10);setTimeout(()=>tone(41,.2,'sine',.08,-8),150)}
+    };
+    function startAmbience() {
+      if(state.started) return;
+      state.started=true; initAudio(); tone(43,2,'sawtooth',.018,-3);
+      const schedule=()=>{
+        clearTimeout(ambienceTimer);
+        if(!$('hud')||$('hud').classList.contains('hidden')) { ambienceTimer=setTimeout(schedule,1800); return; }
+        const r=Math.random(); if(r<.22)sound.creak();else if(r<.43)sound.knock();else if(r<.61)sound.static();else if(r<.77)sound.whisper();else if(r<.9){tone(52,.8,'sine',.055,-10);setTimeout(()=>tone(49,.7,'sine',.04,-8),280)}
+        ambienceTimer=setTimeout(schedule,5500+Math.random()*8500);
+      };
+      ambienceTimer=setTimeout(schedule,3200);
+    }
+    function scare() {
+      if(finale) return; finale=true; clearTimeout(ambienceTimer);
+      if(master&&ctx) master.gain.setTargetAtTime(.0,ctx.currentTime,.08);
+      noise(.55,.32,3200); tone(160,.6,'sawtooth',.23,-125);
+      const overlay=$('birthday-final'); overlay.classList.add('show'); overlay.setAttribute('aria-hidden','false');
+      stopMenuMusic(); finalScream=new Audio('./audio/jumpscare.mp3');
+      finalScream.volume=Math.min(.9,(volumeValue()/100)*.95); finalScream.play().catch(()=>{});
+      setTimeout(()=>overlay.classList.add('message-on'),1650);
+      setTimeout(()=>{if(master&&ctx)master.gain.setTargetAtTime((volumeValue()/100)*.52,ctx.currentTime,.2)},3000);
+    }
+    document.addEventListener('click',e=>{
+      if(e.target.closest('button')) { initAudio(); sound.click(); }
+      if(e.target.closest('#start')) { stopMenuMusic(); startAmbience(); state.lastStep=0; }
+      else if(!finale && ($('menu').classList.contains('visible') || !$('settings').classList.contains('hidden'))) startMenuMusic();
+    },true);
+    document.addEventListener('keydown',e=>{
+      if(e.code === 'Escape' && !$('settings').classList.contains('hidden')) {
+        $('settings').classList.add('hidden'); $('settings').classList.remove('visible'); $('menu').classList.add('visible');
+      }
+      if(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code)&&!e.repeat){const now=performance.now();if(now-state.lastStep>230){state.lastStep=now;sound.step()}}
+      if(e.code==='KeyE') sound.door();
+    },true);
+    const title=$('notice-title');
+    if(title)new MutationObserver(()=>{const v=title.textContent||'';if(v.includes('ВЕРНО'))sound.correct();if(v.includes('НЕВЕРНАЯ'))sound.wrong();if(v.includes('СОВСЕМ РЯДОМ')){sound.wrong();setTimeout(sound.whisper,650)}}).observe(title,{childList:true,subtree:true,characterData:true});
+    window.addEventListener('mishanya-finale',()=>{initAudio();scare()});
+    window.addEventListener('mishanya-started',()=>setTimeout(stopMenuMusic,850));
+    window.addEventListener('mishanya-menu',startMenuMusic);
+    window.addEventListener('mishanya-volume',e=>{if(menuMusic)menuMusic.volume=e.detail*.7});
+    $('birthday-final').querySelector('.final-close').addEventListener('click',()=>{
+      const overlay=$('birthday-final'); overlay.classList.remove('show','message-on'); overlay.setAttribute('aria-hidden','true'); finale=false;
+      if(finalScream){finalScream.pause();finalScream.currentTime=0;finalScream=null;} location.reload();
+    });
+    $('volume').addEventListener('input',()=>{const vol=volumeValue()/100;if(master&&ctx)master.gain.setTargetAtTime(vol*.52,ctx.currentTime,.04);if(menuMusic)menuMusic.volume=vol*.7;syncVolumeLabel();});
+    syncVolumeLabel();
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){if(ctx&&ctx.state==='running')ctx.suspend();if(menuMusic)menuMusic.pause();}
+      else {if(ctx&&ctx.state==='suspended')ctx.resume();if(!finale&&($('menu').classList.contains('visible')||!$('settings').classList.contains('hidden')))startMenuMusic();}
+    });
+    document.addEventListener('DOMContentLoaded',startMenuMusic,{once:true});
+    window.addEventListener('load',startMenuMusic);
+  })();
+  </script>
+  <script>
+  (() => {
+    const byId = id => document.getElementById(id);
+    const panel = byId('boot-error');
+    const message = byId('boot-error-message');
+    let shown = false;
+    function showBootError(reason) {
+      if (shown) return;
+      shown = true;
+      message.textContent = String(reason || 'Игровой модуль не загрузился.').slice(0, 500);
+      panel.classList.add('show');
+    }
+    window.addEventListener('error', event => {
+      if (window.__mishanyaGameReady) return;
+      const file = event.filename ? ` (${event.filename.split('/').pop()})` : '';
+      showBootError((event.message || 'Ошибка загрузки игрового JavaScript') + file);
+    }, true);
+    window.addEventListener('unhandledrejection', event => {
+      if (!window.__mishanyaGameReady) showBootError(event.reason?.message || event.reason || 'Ошибка загрузки игрового модуля.');
+    });
+    window.addEventListener('mishanya-boot-error', event => showBootError(event.detail || 'Ошибка запуска игры.'));
+    byId('game-module')?.addEventListener('error', () => {
+      showBootError('Не удалось загрузить ./src/three-game.js или ./vendor/three.module.js. Проверь, что папки src и vendor загружены полностью и сервер отдаёт .js как JavaScript.');
+    });
+    byId('start')?.addEventListener('click', () => {
+      setTimeout(() => {
+        const menuStillOpen = byId('menu')?.classList.contains('visible');
+        const introStillHidden = byId('intro-cutscene')?.classList.contains('hidden');
+        if (!window.__mishanyaGameReady || (menuStillOpen && introStillHidden)) {
+          showBootError('Игровой модуль не подключил обработчик запуска. Обычно причина — не загружена папка src/vendor, неверный MIME-тип .js или ошибка WebGL. Обнови страницу через Ctrl+F5; проверь, что загружено всё содержимое ZIP.');
+        }
+      }, 1400);
+    }, true);
+    byId('boot-reload')?.addEventListener('click', () => location.reload());
+  })();
+  </script>
+</body>
+</html>
