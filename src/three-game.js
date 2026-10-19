@@ -446,7 +446,12 @@ function setupRound() {
   updateHud();
 }
 function updateHud() {
-  $('night').textContent = `НОЧЬ ${state.night} / 8`;
+  $('night').textContent = `НОЧЬ ${String(state.night).padStart(2, '0')} / 08`;
+  document.querySelectorAll('#night-progress .night-step').forEach((step, index) => {
+    step.classList.toggle('completed', index + 1 < state.night);
+    step.classList.toggle('current', index + 1 === state.night);
+    step.setAttribute('aria-current', index + 1 === state.night ? 'step' : 'false');
+  });
   $('objective').textContent = 'Осмотри коридор. Замечай детали и решай сам, какой выход выбрать.';
 }
 function say(text, duration = 4600, voice = false) {
@@ -558,7 +563,7 @@ function start() {
   clearHorrorMood();
   setupRound();
   // Отдельный постановочный кадр: Мишаня виден в самом коридоре, прежде чем начнётся погоня.
-  spawnMisha(false, -16.2, 0.72);
+  spawnMisha(true, -16.2, 0.72);
   introActive = true; introElapsed = 0; introCueIndex = -1;
   camera.position.set(0, 1.72, 12.5);
   camera.lookAt(0, 1.48, -20);
@@ -658,7 +663,7 @@ function chooseDoor(door) {
   } else {
     playClip('death-bong.mp3', 0.9);
     resetToFirstNight();
-    notice('НЕВЕРНАЯ ДВЕРЬ', 'Мишаня поймал тебя. Коридор возвращает всё к первой ночи.', 'Заново', continueRound);
+    notice('ТЫ ПРОИГРАЛ', 'Ты выбрал не ту дверь. Коридор сбросил прогресс — попробуй ещё раз.', 'Попробовать снова', continueRound);
   }
 }
 function toMenu() {
@@ -692,7 +697,7 @@ function endGameWithDeath() {
   playClip('death-bong.mp3', 0.95);
   pulse(38, 0.6, 0.16);
   resetToFirstNight();
-  notice('ОН СОВСЕМ РЯДОМ', 'Мишаня догнал тебя. В следующий раз не стой на месте — беги к двери.', 'Заново', continueRound);
+  notice('ТЫ ПРОИГРАЛ', 'Мишаня тебя поймал. Попробуй ещё раз — следи за аномалиями и доберись до двери.', 'Попробовать снова', continueRound);
   setTimeout(() => { state.died = false; }, 900);
 }
 function update(delta) {
