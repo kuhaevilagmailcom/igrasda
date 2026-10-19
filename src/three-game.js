@@ -475,11 +475,22 @@ function setIntroCue(index) {
   if (index === introCueIndex || !introCues[index]) return;
   introCueIndex = index;
   const cue = introCues[index];
-  $('intro-kicker').textContent = cue.kicker;
-  $('intro-subtitle').textContent = cue.text;
-  $('intro-caption').classList.remove('intro-caption-change');
-  void $('intro-caption').offsetWidth;
-  $('intro-caption').classList.add('intro-caption-change');
+  const caption = $('intro-caption');
+  const kicker = $('intro-kicker');
+  const subtitle = $('intro-subtitle');
+  // Keep the narration visible even if another stylesheet or animation leaves it hidden.
+  caption.classList.remove('hidden');
+  caption.style.display = 'block';
+  caption.style.visibility = 'visible';
+  caption.style.opacity = '1';
+  kicker.textContent = cue.kicker;
+  subtitle.textContent = cue.text;
+  subtitle.style.display = 'block';
+  subtitle.style.visibility = 'visible';
+  subtitle.style.opacity = '1';
+  caption.classList.remove('intro-caption-change');
+  void caption.offsetWidth;
+  caption.classList.add('intro-caption-change');
 }
 function start() {
   startAudio(); setDrone(true);
@@ -510,8 +521,8 @@ function updateIntro(dt) {
     misha.position.x = 0.72 + Math.sin(t * 0.82) * 0.14;
     misha.position.z = -16.2 + 8.4 * mishaProgress;
     misha.userData.distance = Math.hypot(camera.position.x - misha.position.x, camera.position.z - misha.position.z);
-    // Вступление снимается спереди по коридору: оставляем плоскость лицом к камере.
-    // lookAt() каждый кадр вместе с анимацией поворота вызывал резкие перевороты спрайта.
+    // В заставке тоже поворачиваем спрайт только по вертикали — без наклона и кувырков.
+    misha.rotation.set(0, Math.atan2(camera.position.x - misha.position.x, camera.position.z - misha.position.z), 0);
     animateMisha(dt, true);
   }
   if (t < 4.5) {
@@ -664,7 +675,9 @@ function update(delta) {
     const chaseSpeed = running ? 1.78 + pressure : 2.48 + pressure;
     misha.position.x += (dx / distance) * dt * chaseSpeed;
     misha.position.z += (dz / distance) * dt * chaseSpeed;
-    misha.lookAt(camera.position.x, misha.position.y, camera.position.z);
+    // Billboard rotates only around the vertical axis. Full lookAt() can pitch the
+    // flat sprite when camera height changes and make the image appear to flip.
+    misha.rotation.set(0, Math.atan2(camera.position.x - misha.position.x, camera.position.z - misha.position.z), 0);
     animateMisha(dt, true);
     if (distance < 7 && performance.now() - state.lastPulse > Math.max(250, distance * 110)) {
       state.lastPulse = performance.now(); pulse(48 + distance * 4, 0.24, 0.13);
@@ -679,7 +692,7 @@ function update(delta) {
       speakMisha();
     }
   } else if (misha?.visible) {
-    misha.lookAt(camera.position.x, misha.position.y, camera.position.z);
+    misha.rotation.set(0, Math.atan2(camera.position.x - misha.position.x, camera.position.z - misha.position.z), 0);
     animateMisha(dt, false);
   }
   for (const item of lights) {
