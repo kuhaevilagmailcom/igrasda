@@ -172,3 +172,16 @@ body.horror-night-3 #hud .hud-overline #night{color:#ff6c74}
 @keyframes intro-caption-reveal{from{opacity:0;transform:translateY(15px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:650px){.intro-topline{top:46px;font-size:7px;letter-spacing:.11em}.intro-caption{left:23px;bottom:clamp(105px,17vh,160px);width:calc(100vw - 46px)}.intro-caption p{font-size:8px;margin-bottom:11px}.intro-caption h2{font-size:clamp(27px,7vw,39px)}#intro-skip{top:auto;bottom:clamp(49px,9vh,95px);right:20px;padding:10px 12px;font-size:8px}.intro-progress{bottom:clamp(32px,7vh,82px)}}
 @media(prefers-reduced-motion:reduce){.intro-caption-change,#intro-cutscene .intro-topline i{animation:none!important}}
+
+
+/* Новый счётчик прогресса по восьми ночам. */
+.night-progress{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;width:min(270px,100%);margin:0 0 11px}
+.night-progress .night-step{display:block;height:4px;border-radius:3px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.08);transition:background .25s ease,box-shadow .25s ease,transform .25s ease}
+.night-progress .night-step.completed{background:linear-gradient(90deg,#9e252d,#e54c53);border-color:rgba(255,100,105,.45)}
+.night-progress .night-step.current{background:#ff7b7f;box-shadow:0 0 12px rgba(255,68,78,.65);transform:scaleY(1.55)}
+#hud .hud-overline #night{font-variant-numeric:tabular-nums;font-size:10px;letter-spacing:.2em;color:#ff8588}
+#intro-cutscene{background:transparent!important}
+#intro-cutscene .intro-vignette{z-index:0;pointer-events:none}
+#intro-cutscene .intro-caption{z-index:5;opacity:1;visibility:visible}
+#intro-cutscene .intro-topline,#intro-cutscene .intro-progress,#intro-cutscene #intro-skip{z-index:6}
+@media(max-width:650px){.night-progress{width:min(225px,100%);gap:4px;margin-bottom:8px}.night-progress .night-step{height:3px}}
