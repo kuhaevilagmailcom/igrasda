@@ -711,8 +711,10 @@ function update(delta) {
   const speed = running ? 5.2 : 2.85;
   if (moving) {
     const len = Math.hypot(sx, sz); sx /= len; sz /= len;
+    // Система координат камеры: вправо при повороте камеры — это (cos(yaw), 0, -sin(yaw)); вперёд — (-sin(yaw), 0, -cos(yaw)).
+    // Раньше знак у бокового движения по Z был обратным, поэтому в повёрнутой камере A/D ощущались зеркально.
     const nx = state.x + (Math.cos(state.yaw) * sx - Math.sin(state.yaw) * sz) * speed * dt;
-    const nz = state.z + (Math.sin(state.yaw) * sx - Math.cos(state.yaw) * sz) * speed * dt;
+    const nz = state.z + (-Math.sin(state.yaw) * sx - Math.cos(state.yaw) * sz) * speed * dt;
     if (canOccupy(nx, state.z)) state.x = nx;
     if (canOccupy(state.x, nz)) state.z = nz;
     state.stepTimer -= dt;
@@ -826,8 +828,9 @@ document.addEventListener('keyup', (e) => { state.keys[e.code] = false; });
 window.addEventListener('blur', () => { state.keys = Object.create(null); });
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement === renderer.domElement && !state.paused) {
-    state.yaw -= e.movementX * 0.0022;
-    state.pitch = THREE.MathUtils.clamp(state.pitch - e.movementY * 0.0022, -1.0, 1.0);
+    // Чуть ниже чувствительность и более узкий вертикальный диапазон — камера поворачивается плавнее и не задирается резко.
+    state.yaw -= e.movementX * 0.0018;
+    state.pitch = THREE.MathUtils.clamp(state.pitch - e.movementY * 0.0018, -0.88, 0.88);
   }
 });
 document.addEventListener('pointerlockchange', () => {
