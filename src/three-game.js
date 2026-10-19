@@ -10,13 +10,14 @@ const state = {
   horrorBurstTimer: 0, horrorBurstDuration: 0,
 };
 
-// Две спокойные ночи нужны, чтобы игроку приходилось не только выбирать красную дверь.
+// Первая ночь — эталонный коридор без аномалий: верный выход всегда синий.
 const nights = [
-  { anomaly: true, kind: 'red' },
-  { anomaly: false, kind: 'normal' },
-  { anomaly: true, kind: 'chairs' },
-  { anomaly: false, kind: 'normal' },
-  { anomaly: true, kind: 'final' },
+  { anomaly: false, kind: 'normal' }, // 1: исходный коридор, синяя дверь
+  { anomaly: true, kind: 'red' },     // 2: аварийный красный свет
+  { anomaly: true, kind: 'chairs' },  // 3: мебель в проходе
+  { anomaly: true, kind: 'red-chairs' }, // 4: красный свет и мебель
+  { anomaly: true, kind: 'portrait' },   // 5: фигура у дальней стены
+  { anomaly: true, kind: 'final' },      // 6: финальная аномалия
 ];
 const thoughts = [
   'Ты здесь не один. Продолжай идти.',
@@ -70,7 +71,7 @@ const introCues = [
   { at: 3.2, kicker: 'ЗАПИСЬ ПОВРЕЖДЕНА', text: 'Коридор не заканчивается. Из темноты доносится чьё-то дыхание.' },
   { at: 6.4, kicker: 'ОБНАРУЖЕН ЧЕЛОВЕК', text: 'Его зовут Мишаня. Не подходи к нему и не стой на месте.' },
   { at: 9.6, kicker: 'ОН УЖЕ ИДЁТ', text: 'Впереди две двери. Замечай странности — ошибка вернёт тебя в начало.' },
-  { at: 12.2, kicker: 'ПЯТЬ НОЧЕЙ', text: 'Найди правильный выход. И не дай Мишане тебя догнать.' }
+  { at: 12.2, kicker: 'ПЯТЬ НОЧЕЙ', text: 'Шесть ночей. Первая покажет исходный коридор — дальше аномалии будут опаснее.' }
 ];
 let dust = null;
 let dustPositions = null;
@@ -361,7 +362,7 @@ function setupRound() {
   const config = nights[state.night - 1];
   state.anomaly = config.anomaly;
   doors.forEach((door) => { door.userData.correct = state.anomaly ? door.userData.isRed : !door.userData.isRed; });
-  if (config.kind === 'red') {
+  if (['red', 'red-chairs', 'final'].includes(config.kind)) {
     // Яркий аварийный свет заметен издалека, но интерфейс не сообщает, что он означает.
     redLight.intensity = 6.4;
     const emergencyLamp = addBox(0.72, 0.12, 0.2, 0, 3.18, -12, 0xe02028, anomalyGroup, { emissive: 0xff0712, emissiveIntensity: 2.5, roughness: 0.35 });
@@ -369,13 +370,13 @@ function setupRound() {
     const glow = new THREE.PointLight(0xff1420, 2.8, 11, 1.6);
     glow.position.set(0, 3.05, -12); anomalyGroup.add(glow);
   }
-  if (config.kind === 'chairs') {
+  if (['chairs', 'red-chairs'].includes(config.kind)) {
     // Контрастная группа предметов нарушает привычную симметрию коридора.
     addChair(-1.12, -10.1); addChair(0.18, -11.25); addChair(1.16, -10.15);
     addBox(1.24, 0.028, 0.12, 0.15, 0.035, -12.8, 0x71604e, anomalyGroup);
     addBox(0.82, 0.024, 0.09, -0.48, 0.035, -9.35, 0x88725b, anomalyGroup);
   }
-  if (config.kind === 'final') {
+  if (['portrait', 'final'].includes(config.kind)) {
     const tex = loader.load(asset('assets/hero-close.png')); tex.colorSpace = THREE.SRGBColorSpace;
     const portrait = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 2.2), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
     portrait.position.set(3.36, 1.84, -11.7); portrait.rotation.y = -Math.PI / 2; anomalyGroup.add(portrait);
@@ -384,8 +385,8 @@ function setupRound() {
   // Мишаня присутствует на каждом уровне с самого начала раунда.
   // Он начинает позади игрока, давая несколько секунд на ориентирование, а затем идёт в погоню.
   // С каждой ночью стартовая дистанция немного сокращается, а давление на игрока растёт.
-  const mishaGap = [4.9, 4.8, 4.6, 4.35, 4.1][state.night - 1];
-  const mishaLane = [-0.72, 0.68, -0.5, 0.48, 0][state.night - 1];
+  const mishaGap = [5.2, 4.9, 4.7, 4.45, 4.2, 3.95][state.night - 1];
+  const mishaLane = [-0.72, 0.68, -0.5, 0.48, -0.28, 0][state.night - 1];
   const mishaZ = Math.min(12.75, state.z + mishaGap);
   spawnMisha(state.active, mishaZ, mishaLane);
   state.mishaDelay = state.active ? Math.max(1.2, 2.6 - (state.night - 1) * 0.24) : 0;
@@ -396,7 +397,7 @@ function setupRound() {
   updateHud();
 }
 function updateHud() {
-  $('night').textContent = `НОЧЬ ${state.night} / 5`;
+  $('night').textContent = `НОЧЬ ${state.night} / 6`;
   $('objective').textContent = 'Осмотри коридор. Замечай детали и решай сам, какой выход выбрать.';
 }
 function say(text, duration = 4600, voice = false) {
@@ -593,7 +594,7 @@ function resetToFirstNight() {
 function chooseDoor(door) {
   if (state.paused || !state.active) return;
   if (door.userData.correct) {
-    if (state.night === 5) {
+    if (state.night === 6) {
       state.active = false; state.paused = true; setDrone(false);
       $('hud').classList.add('hidden'); $('crosshair').classList.add('hidden');
       $('misha-dialogue').classList.add('hidden');
