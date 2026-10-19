@@ -309,7 +309,8 @@ function animateMisha(dt, walking = true) {
   mishaAnimTime += dt * (walking ? 1 : 0.28);
   const phase = mishaAnimTime * (walking ? 8.2 : 1.4);
   misha.position.y = (misha.userData.baseY ?? 1.48) + (walking ? Math.abs(Math.sin(phase)) * 0.055 : Math.sin(phase) * 0.018);
-  misha.rotation.z = Math.sin(phase * 0.52) * (walking ? 0.035 : 0.012);
+  // Не меняем rotation.z напрямую после lookAt(): смешивание Euler и quaternion
+  // могло заваливать плоскость Мишани набок и визуально переворачивать персонажа.
   // На дистанции чередуются полнофигурные позы; вблизи он иногда резко меняет жест.
   const poses = walking
     ? (Number(misha.userData.distance ?? 99) < 5 ? [0, 3, 0, 2, 0, 3] : [0, 1, 0, 1])
@@ -438,12 +439,12 @@ function playClip(file, multiplier = 1, loop = false) {
 }
 const voiceDurations = [1776, 3631, 2194, 1175, 1045, 2978];
 const voiceCaptions = [
-  'Я слышу тебя…',
-  'Не думай, что ты здесь один.',
-  'Не оборачивайся…',
-  'Я уже рядом.',
-  'Беги…',
-  'Ты всё ещё ищешь выход?'
+  'Сука, сука, иди сюда, еблан!',
+  'Привет, бро! Я Миша 228, я нахуй такой злой!',
+  'Я тебя съееем!',
+  'Хахахахаха!',
+  'Гондонище!',
+  'Пидорас, я тебя убью нахуй!'
 ];
 function speakMisha() {
   if (activeVoiceClip && !activeVoiceClip.paused && !activeVoiceClip.ended) return;
@@ -508,7 +509,8 @@ function updateIntro(dt) {
     misha.position.x = 0.72 + Math.sin(t * 0.82) * 0.14;
     misha.position.z = -16.2 + 8.4 * mishaProgress;
     misha.userData.distance = Math.hypot(camera.position.x - misha.position.x, camera.position.z - misha.position.z);
-    misha.lookAt(camera.position.x, misha.position.y, camera.position.z);
+    // Вступление снимается спереди по коридору: оставляем плоскость лицом к камере.
+    // lookAt() каждый кадр вместе с анимацией поворота вызывал резкие перевороты спрайта.
     animateMisha(dt, true);
   }
   if (t < 4.5) {
